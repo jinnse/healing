@@ -1,0 +1,56 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: healing-scope-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: pod.rules
+      rules:
+        # 1. Liveness Probe로 인한 Pod 재시작 감지
+        - alert: PodRestartedByLivenessProbe
+          expr: increase(kube_pod_container_status_restarts_total[5m]) > 0
+          for: 0s
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod가 Liveness Probe로 인해 재시작됨"
+            description: "{{ $labels.namespace }}/{{ $labels.pod }}의 컨테이너 {{ $labels.container }}가 지난 5분간 {{ $value }}번 재시작되었습니다."
+
+        # 2. Liveness Probe 실패 (Pod 비정상 상태)
+        - alert: LivenessProbeFailed
+          expr: |
+            kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff"} > 0
+            or
+            kube_pod_container_status_terminated_reason{reason="Error"} > 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Liveness Probe 실패로 Pod 비정상 상태"
+            description: "{{ $labels.namespace }}/{{ $labels.pod }}의 컨테이너 {{ $labels.container }}가 Liveness probe 실패로 인해 비정상 상태입니다."
+
+        # 3. Readiness Probe 성공 (Ready 상태 복구)
+        - alert: PodReadyStateRecovered
+          expr: |
+            kube_pod_status_ready{condition="true"} == 1
+            and
+            kube_pod_status_ready{condition="true"} offset 2m == 0
+          for: 30s
+          labels:
+            severity: info
+          annotations:
+            summary: "Pod가 Ready 상태로 복구됨"
+            description: "{{ $labels.namespace }}/{{ $labels.pod }}가 Ready 상태로 복구되어 트래픽을 받을 수 있습니다."
+
+        # 4. Readiness Probe 실패 (트래픽 수신 불가)
+        - alert: ReadinessProbeFailed
+          expr: kube_pod_status_ready{condition="false"} == 1
+          for: 2m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Readiness Probe 실패"
+            description: "{{ $labels.namespace }}/{{ $labels.pod }}가 Ready 상태가 아니어서 서비스 트래픽을 받을 수 없습니다."

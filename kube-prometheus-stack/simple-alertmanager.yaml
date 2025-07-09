@@ -1,0 +1,18 @@
+# simple-alertmanager.yaml
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+    config:
+      global:
+        smtp_smarthost: 'smtp.gmail.com:587'
+        smtp_from: 'tpwls6028@gmail.com'
+        smtp_auth_username: 'tpwls6028@gmail.com'
+        smtp_auth_password: 'your-app-password'
+      route:
+        receiver: 'default'
+      receivers:
+      - name: 'default'
+        email_configs:
+        - to: 'tpwls6028@gmail.com'
+          subject: 'Test Alert'

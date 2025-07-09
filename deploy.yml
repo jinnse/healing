@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: healing-scope-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: service
+  template:
+    metadata:
+      labels:
+        app: service
+    spec:
+      # 컨테이너 종료 시 대기 시간
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: healing-scope-ctn
+        image: jinsse/aws9:app-v1
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "250m"
+          limits:
+            memory: "64Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 5000  # Flask 앱이 5000 포트에서 실행됨
+        volumeMounts:
+        - name: healing-scope-vol
+          mountPath: /app/logs
+        
+        # Liveness Probe: 컨테이너가 살아있는지 확인
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 5000
+          initialDelaySeconds: 15   # Flask 앱 시작 시간 고려
+          periodSeconds: 10         # 10초마다 체크 (너무 빈번하면 부하)
+          timeoutSeconds: 5         # 5초 내 응답 없으면 실패
+          failureThreshold: 3       # 3번 연속 실패하면 재시작
+          successThreshold: 1       # 1번 성공하면 정상으로 간주
+        
+        # Readiness Probe: 트래픽을 받을 준비가 되었는지 확인
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 5000
+          initialDelaySeconds: 10   # 시작 후 10초 뒤 체크 시작
+          periodSeconds: 5          # 5초마다 체크
+          timeoutSeconds: 3         # 3초 내 응답 없으면 실패
+          failureThreshold: 2       # 2번 연속 실패하면 Not Ready
+          successThreshold: 1       # 1번 성공하면 Ready
+        
+        # # Startup Probe: 초기 시작 시간이 긴 애플리케이션용 (선택사항)
+        # startupProbe:
+        #   httpGet:
+        #     path: /startup
+        #     port: 5000
+        #   initialDelaySeconds: 5
+        #   periodSeconds: 5
+        #   timeoutSeconds: 3
+        #   failureThreshold: 6       # 30초 동안 시작 대기
+        #   successThreshold: 1
+        
+
+      
+      volumes:
+      - name: healing-scope-vol
+        persistentVolumeClaim:
+          claimName: healing-scope-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: healing-scope-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app: service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000

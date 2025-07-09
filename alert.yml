@@ -1,0 +1,14 @@
+alertmanager:
+  config:
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'tpwls6028@gmail.com'
+      smtp_auth_username: 'tpwls6028@gmail.com'
+      smtp_auth_password: 'cmyu dawt dshd awkj' # 구글 앱 비밀번호 내 이메일 비밀번호가 아니다 
+    route:
+      receiver: 'email-alert'
+    receivers:
+      - name: 'email-alert'
+        email_configs:
+          - to: 'tpwls6028@gmail.com'
+            send_resolved: true
