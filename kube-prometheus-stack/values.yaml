@@ -506,21 +506,25 @@ alertmanager:
   ## ref: https://prometheus.io/docs/alerting/configuration/#configuration-file
   ##      https://prometheus.io/webtools/alerting/routing-tree-editor/
   ##
-  config: 
+  config:
     global:
       resolve_timeout: 5m
 
     route:
-      receiver: 'slack-notifications'
+      receiver: slack-notifications
       group_by: ['alertname']
       group_wait: 10s
       group_interval: 10s
       repeat_interval: 1h
+      routes:
+        - match_re:
+            severity: ".*"
+          receiver: slack-notifications
 
     receivers:
-      - name: 'slack-notifications'
+      - name: slack-notifications
         slack_configs:
-          - channel: '#alerts'
+          - channel: '#알람용-채널'
             send_resolved: true
             username: 'Prometheus'
             title: >
@@ -548,7 +552,7 @@ alertmanager:
               ---
               {{ end }}
             color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
-            api_url: 'https://hooks.slack.com/services/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'
+            api_url: 'https://hooks.slack.com/services/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'
 
   ## Alertmanager configuration directives (as string type, preferred over the config hash map)
   ## stringConfig will be used only, if tplConfig is true
@@ -3882,6 +3886,11 @@ prometheus:
   ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec
   ##
   prometheusSpec:
+    alerting:
+      alertmanagers:
+      - namespace: monitoring
+      name: alertmanager-operated
+      port: web
     ## Statefulset's persistent volume claim retention policy
     ## whenDeleted and whenScaled determine whether
     ## statefulset's PVCs are deleted (true) or retained (false)
@@ -4026,13 +4035,6 @@ prometheus:
     ##
     ## Default configuration will connect to the alertmanager deployed as part of this release
     ##
-    alertingEndpoints: 
-      - name: alertmanager
-        namespace: monitoring
-        port: web  # serviceName의 portName (보통 web이야)
-        scheme: http
-        apiVersion: v2
-        pathPrefix: /
 
     ## External labels to add to any time series or alerts when communicating with external systems
     ##

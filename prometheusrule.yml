@@ -1,23 +1,23 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: healing-scope-alerts
-  namespace: monitoring
+  name: healing-scope
+  namespace: monitoring #helm으로 모니터링 관련을 해당 네임 스페이스에 설치
   labels:
     release: prometheus
 spec:
   groups:
-    - name: pod.rules
+    - name: pods-2.rules
       rules:
         # 1. Liveness Probe로 인한 Pod 재시작 감지
         - alert: PodRestartedByLivenessProbe
-          expr: increase(kube_pod_container_status_restarts_total[5m]) > 0
+          expr: increase(kube_pod_container_status_restarts_total{namespace!="kube-system"}[5m]) > 0
           for: 0s
           labels:
             severity: warning
           annotations:
             summary: "Pod가 Liveness Probe로 인해 재시작됨"
-            description: "{{ $labels.namespace }}/{{ $labels.pod }}의 컨테이너 {{ $labels.container }}가 지난 5분간 {{ $value }}번 재시작되었습니다."
+            description: "{{ $labels.pod }}"
 
         # 2. Liveness Probe 실패 (Pod 비정상 상태)
         - alert: LivenessProbeFailed
@@ -35,9 +35,9 @@ spec:
         # 3. Readiness Probe 성공 (Ready 상태 복구)
         - alert: PodReadyStateRecovered
           expr: |
-            kube_pod_status_ready{condition="true"} == 1
+            kube_pod_status_ready{condition="true", namespace="default"} == 1
             and
-            kube_pod_status_ready{condition="true"} offset 2m == 0
+            kube_pod_status_ready{condition="true", namespace="default"} offset 2m == 1
           for: 30s
           labels:
             severity: info
@@ -54,3 +54,13 @@ spec:
           annotations:
             summary: "Readiness Probe 실패"
             description: "{{ $labels.namespace }}/{{ $labels.pod }}가 Ready 상태가 아니어서 서비스 트래픽을 받을 수 없습니다."
+        
+        # # 5. 확실한 테스트 알람 (즉시 발동)
+        # - alert: TestImmediateFiring
+        #   expr: vector(1)  # 항상 1을 반환하는 확실한 쿼리
+        #   for: 0s
+        #   labels:
+        #     severity: critical
+        #   annotations:
+        #     summary: "즉시 발동 테스트 알람"
+        #     description: "이 알람은 반드시 발동되어야 합니다. Alertmanager 연동 테스트용입니다."

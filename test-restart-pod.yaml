@@ -1,0 +1,16 @@
+# test-restart-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-restart-pod
+  namespace: default
+spec:
+  containers:
+  - name: test-container
+    image: nginx
+    livenessProbe:
+      exec:
+        command: ["/bin/sh", "-c", "sleep 30; exit 1"]  # 30초 후 실패
+      initialDelaySeconds: 5
+      periodSeconds: 10
+      failureThreshold: 1

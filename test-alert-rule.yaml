@@ -1,19 +1,40 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: always-firing-alert
+  name: fixed-test-rule
   namespace: monitoring
   labels:
     release: prometheus
 spec:
   groups:
-    - name: test.alert.rules
+    - name: fixed.test.rules
       rules:
-        - alert: AlwaysFiringTest
+        # 1. 확실히 작동하는 벡터 알람
+        - alert: VectorTestAlert
           expr: vector(1)
           for: 0s
           labels:
-            severity: warning
+            severity: critical
           annotations:
-            summary: "Always firing test alert"
-            description: "이 알람은 항상 활성화됩니다. 메일 수신 테스트용입니다."
+            summary: "Vector 테스트 알람"
+            description: "vector(1) 함수를 사용한 확실한 테스트 알람입니다."
+
+        # 2. Prometheus 자체 메트릭 사용 (확실히 존재)
+        - alert: PrometheusUpAlert
+          expr: up{job="prometheus"} == 1
+          for: 0s
+          labels:
+            severity: info
+          annotations:
+            summary: "Prometheus Up 테스트"
+            description: "Prometheus가 정상 작동 중입니다."
+
+        # 3. kube-state-metrics 확인 (이미 확인된 메트릭)
+        - alert: KubeStateMetricsUpAlert
+          expr: up{job="kube-state-metrics"} == 1
+          for: 0s
+          labels:
+            severity: info
+          annotations:
+            summary: "kube-state-metrics Up 테스트"
+            description: "kube-state-metrics가 정상 작동 중입니다."
