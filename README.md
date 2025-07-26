@@ -10,7 +10,7 @@ Self-Healing 및 실시간 모니터링이 구현된 Kubernetes 기반 인프라
 
 ## 인프라 구성
 
-https://github.com/jinnse/healing/issues/1#issue-3265242460
+<img width="1201" height="521" alt="Image" src="https://github.com/user-attachments/assets/7927040c-33c1-4596-89d6-e1853fd6fd1f" />
 >
 > *위 이미지는 Healing Scope의 인프라 구성도를 나타냅니다.*
 
