@@ -7,7 +7,6 @@ Self-Healing 및 실시간 모니터링이 구현된 Kubernetes 기반 인프라
 - Kubernetes의 Self-Healing 및 모니터링 원리 실습 및 시각화
 - 장애 유발 → 자동 복구 → 모니터링/알림까지의 실전 DevOps 사이클 학습
 - PVC, NFS, Slack 연동 등 클라우드 네이티브 인프라 실전 경험
-- (선택) 실제 장애 상황에서의 데이터 보호 및 알림 체계 구축 등 확장 가능
 
 ## 인프라 구성
 
