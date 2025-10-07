@@ -1,7 +1,7 @@
 # Healing Scope
 
 ## 프로젝트 개요
-Self-Healing 및 실시간 모니터링이 구현된 Kubernetes 기반 인프라 실습 프로젝트
+Self-Healing 및 실시간 모니터링이 구현된 Kubernetes 기반 인프라 프로젝트
 
 ## 프로젝트 목적
 - Kubernetes의 Self-Healing 및 모니터링 원리 실습 및 시각화
